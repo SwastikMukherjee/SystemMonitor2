@@ -5,29 +5,58 @@
 #include <vector>
 
 #include "process.h"
+#include "linux_parser.h"
 
 using std::string;
 using std::to_string;
 using std::vector;
 
-// TODO: Return this process's ID
-int Process::Pid() { return 0; }
+// Return this process's ID
+int Process::Pid() { 
+    return pid_; 
+}
 
-// TODO: Return this process's CPU utilization
-float Process::CpuUtilization() { return 0; }
+// Return this process's CPU utilization
+float Process::CpuUtilization() const { 
+    return LinuxParser::ProcessCpuUtilization(pid_); 
+}
 
-// TODO: Return the command that generated this process
-string Process::Command() { return string(); }
+// Return the command that generated this process
+std::string Process::Command() { 
+    return LinuxParser::Command(pid_).size() > 40 ? LinuxParser::Command(pid_).substr(0,40) + "..." : LinuxParser::Command(pid_); 
+}
 
-// TODO: Return this process's memory utilization
-string Process::Ram() { return string(); }
+// Return this process's memory utilization
+std::string Process::Ram() const { 
+    return LinuxParser::Ram(pid_); 
+}
 
-// TODO: Return the user (name) that generated this process
-string Process::User() { return string(); }
+// Return the user (name) that generated this process
+std::string Process::User() { 
+    return LinuxParser::User(pid_);
+}
 
-// TODO: Return the age of this process (in seconds)
-long int Process::UpTime() { return 0; }
+// Return the age of this process (in seconds)
+long int Process::UpTime() { 
+    return LinuxParser::UpTime() - LinuxParser::UpTime(pid_); 
+}
 
-// TODO: Overload the "less than" comparison operator for Process objects
-// REMOVE: [[maybe_unused]] once you define the function
-bool Process::operator<(Process const& a[[maybe_unused]]) const { return true; }
+// Overload the "less than" comparison operator for Process objects
+bool Process::operator<(Process const& a) const { 
+    std::string ramValue1 = this->Ram();
+    std::string ramValue2 = a.Ram();
+    ramValue1.erase(std::remove(ramValue1.begin(), ramValue1.end(), ' '), ramValue1.end());
+    ramValue2.erase(std::remove(ramValue2.begin(), ramValue2.end(), ' '), ramValue2.end());
+
+    // First look at the RAM utilization to sort.
+    if (ramValue1 != ramValue2){
+        try {
+            return std::stof(ramValue2) < std::stof(ramValue1); 
+        } catch (const std::invalid_argument& arg) {
+            return true;
+        }
+    }
+
+    // If the memory utilization is identical, look at CPU utilization.
+    return a.CpuUtilization() < this->CpuUtilization();
+} 
