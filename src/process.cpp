@@ -49,7 +49,9 @@ bool Process::operator<(Process const& a) const {
     ramValue2.erase(std::remove(ramValue2.begin(), ramValue2.end(), ' '), ramValue2.end());
 
     // First look at the RAM utilization to sort.
-    if (ramValue1 != ramValue2){
+    if(ramVaue1 == "bad_ram" || ramValue2 == "bad_ram")
+    {return true;}
+    else if (ramValue1 != ramValue2){
         try {
             return std::stof(ramValue2) < std::stof(ramValue1); 
         } catch (const std::invalid_argument& arg) {
